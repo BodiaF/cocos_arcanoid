@@ -8,8 +8,5 @@ Block::Block() :
 
 Block::~Block()
 {
-	if (m_sprite) {
-		delete m_sprite;
-		m_sprite = nullptr;
-	}
+   m_sprite = nullptr;
 }

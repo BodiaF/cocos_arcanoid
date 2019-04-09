@@ -270,7 +270,7 @@ void GameArcanoid::checkCollisions()
 	bool vertical_collision = false;
 	bool horizontal_collision = false;
 
-	// checker
+	// == checker
 	auto collisionChecker = [&](cocos2d::Rect targetRect) -> CollisionSide
 	{
 		CollisionSide side = none;
@@ -307,7 +307,7 @@ void GameArcanoid::checkCollisions()
 	};
 
 
-	// check collision with walls
+	// == check collision with walls
 	if (ballRect.getMaxX() > m_gameFieldRect.getMaxX())
 	{
 		pos.x = m_gameFieldRect.getMaxX() - _BALL_RAD;
@@ -326,7 +326,7 @@ void GameArcanoid::checkCollisions()
 		vertical_collision = true;
 	}
 
-	// check collision with board
+	// == check collision with board
 	cocos2d::Vec2 boardPos = m_board->getPosition();
 	cocos2d::Rect boardRect = m_board->getBoundingBox();
 	CollisionSide boardCollisionSide = collisionChecker(boardRect);
@@ -346,8 +346,22 @@ void GameArcanoid::checkCollisions()
 		vertical_collision = true;
 	}
 
-	// check collision with each block
-	std::for_each(m_activeBlocksVector.begin(), m_activeBlocksVector.end(), [=](Block* block) {
+	// == check collision with each block
+	// vector of blocks and distances (for faster sort)
+	std::vector<std::pair<Block*, float>> blocksInRange;
+	std::for_each(m_activeBlocksVector.begin(), m_activeBlocksVector.end(), [&](Block* block) {
+		cocos2d::Vec2 blockPos = block->GetPosition();
+		float dist = sqrt(pow(blockPos.x - pos.x, 2) + pow(blockPos.y - pos.y, 2));
+		if (dist < _COLLISION_CHECK_RADIUS)
+			blocksInRange.push_back(std::pair<Block*, float>(block, dist));
+	});
+	// sort by distance
+	std::sort(blocksInRange.begin(), blocksInRange.end(), [](std::pair<Block*, float> &lp, std::pair<Block*, float> &rp) {
+		return lp.second < rp.second;
+	});
+	// check collision
+	std::for_each(blocksInRange.begin(), blocksInRange.end(), [=](std::pair<Block*,float> &blockPair) {
+		Block* block = blockPair.first;
 		cocos2d::Vec2 blockPos = block->GetPosition();
 		float dist = sqrt(pow(blockPos.x - pos.x, 2) + pow(blockPos.y - pos.y, 2));
 		if (dist > _COLLISION_CHECK_RADIUS)
@@ -356,7 +370,7 @@ void GameArcanoid::checkCollisions()
 			block->Striked();
 	});
 
-	// change fly dirrection
+	// == change fly dirrection
 	if (horizontal_collision)
 		m_ballFlyAngle_d = 180 - m_ballFlyAngle_d;
 	if (vertical_collision)

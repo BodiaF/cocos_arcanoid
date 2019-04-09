@@ -56,16 +56,16 @@ bool GameArcanoid::init()
 
 GameArcanoid::~GameArcanoid()
 {
-	std::for_each(m_activeBlocksVector.begin(), m_activeBlocksVector.end(), [](Block *block) {
-		delete block;
-		block = nullptr;
-	});
+   auto deleteBlock = [=](Block *block) {
+      this->removeChild(block->GetSprite());
+      delete block;
+      block = nullptr;
+   };
+
+	std::for_each(m_activeBlocksVector.begin(), m_activeBlocksVector.end(), deleteBlock);
 	m_activeBlocksVector.clear();
 
-	std::for_each(m_inactiveBlocksVector.begin(), m_inactiveBlocksVector.end(), [](Block *block) {
-		delete block;
-		block = nullptr;
-	});
+	std::for_each(m_inactiveBlocksVector.begin(), m_inactiveBlocksVector.end(), deleteBlock);
 	m_inactiveBlocksVector.clear();
 }
 

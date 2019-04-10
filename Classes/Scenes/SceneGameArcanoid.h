@@ -18,10 +18,12 @@ public:
 	/// Some block hp is 0 : remove block to inactive, inc score, check win.
 	virtual void callback_block_died(Block*);
 
-	/// Touch callback : start game or upd board pos.
+	/// Touch callback : start game or enable board moving + upd board move-to pos.
 	virtual bool onTouchBegan(cocos2d::Touch*, cocos2d::Event*);
-	/// Touch move callback : upd board pos.
+	/// Touch move callback : upd board move-to pos.
 	virtual void onTouchMoved(cocos2d::Touch*, cocos2d::Event*);
+   /// Touck_ended callback : disable touch moving + reset board move-to pos.
+   virtual void onTouchEnded(cocos2d::Touch*, cocos2d::Event*);
     
     CREATE_FUNC(GameArcanoid);
 
@@ -49,7 +51,6 @@ private:
 	void endGame(bool isWictory);
 
 	std::vector<Block*> m_activeBlocksVector;		///< "Alive" blocks vector
-	std::vector<Block*> m_inactiveBlocksVector;		///< "Dead" blocks vector
 	cocos2d::Rect m_gameFieldRect;					///< Game field rect : need for wall collisions
 	cocos2d::Sprite *m_board;						///< Board sprite
 	cocos2d::Sprite *m_ball;						///< Ball sprite
@@ -61,6 +62,7 @@ private:
 	float m_ballSpeedMultiplyer;					///< Current speed multiplyer: 1.f + 0.1f for each 5 dead blocks
 	float m_ballFlyAngle_d;							///< Current ball fly angle
 
+   bool  m_board_move;                       ///< Can board move on Update() : true if tapped/clicked, false if tap/click ends
 	float m_board_move_targetX;						///< Position X for board move to
 
 	int m_score;									///< Current score

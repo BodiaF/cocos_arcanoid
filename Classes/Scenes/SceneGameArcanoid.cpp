@@ -39,6 +39,7 @@ bool GameArcanoid::init()
 	m_ballSpeedCurrent = _BALL_BASE_FLY_SPEED;
 	m_ballSpeedMultiplyer = 1.f;
 	m_ballFlyAngle_d = 30.f;
+   m_board_move = false;
 	m_board_move_targetX = origin.x + visibleSize.width / 2;
 
 	// width: 15 blocks | height: viewHeight - 0.5 wall sprite size
@@ -49,6 +50,7 @@ bool GameArcanoid::init()
 	auto touchListener = EventListenerTouchOneByOne::create();
 	touchListener->onTouchBegan = CC_CALLBACK_2(GameArcanoid::onTouchBegan, this);
 	touchListener->onTouchMoved = CC_CALLBACK_2(GameArcanoid::onTouchMoved, this);
+   touchListener->onTouchEnded = CC_CALLBACK_2(GameArcanoid::onTouchEnded, this);
 	Director::getInstance()->getEventDispatcher()->addEventListenerWithSceneGraphPriority(touchListener, this);
 
     return true;
@@ -56,17 +58,10 @@ bool GameArcanoid::init()
 
 GameArcanoid::~GameArcanoid()
 {
-   auto deleteBlock = [=](Block *block) {
-      this->removeChild(block->GetSprite());
+	std::for_each(m_activeBlocksVector.begin(), m_activeBlocksVector.end(), [=](Block *block) {
       delete block;
-      block = nullptr;
-   };
-
-	std::for_each(m_activeBlocksVector.begin(), m_activeBlocksVector.end(), deleteBlock);
+   });
 	m_activeBlocksVector.clear();
-
-	std::for_each(m_inactiveBlocksVector.begin(), m_inactiveBlocksVector.end(), deleteBlock);
-	m_inactiveBlocksVector.clear();
 }
 
 // =============== //
@@ -186,6 +181,7 @@ bool GameArcanoid::onTouchBegan(cocos2d::Touch* touch, cocos2d::Event* event)
 		return true;
 	}
 
+   m_board_move = true;
 	setBoardMoveTargetX(touch->getLocation().x);
 	return true;
 }
@@ -193,6 +189,12 @@ bool GameArcanoid::onTouchBegan(cocos2d::Touch* touch, cocos2d::Event* event)
 void GameArcanoid::onTouchMoved(cocos2d::Touch* touch, cocos2d::Event* event)
 {
 	setBoardMoveTargetX(touch->getLocation().x);
+}
+
+void GameArcanoid::onTouchEnded(cocos2d::Touch* touch, cocos2d::Event* event)
+{
+   m_board_move = true;
+   setBoardMoveTargetX(m_board->getPosition().x);
 }
 
 void GameArcanoid::setBoardMoveTargetX(int x)
@@ -241,6 +243,10 @@ void GameArcanoid::update(float delta)
 
 void GameArcanoid::updateBoardPos(float delta)
 {
+   // no flag = no move
+   if (!m_board_move)
+      return;
+
 	float currentX = m_board->getPosition().x;
 	if (currentX == m_board_move_targetX)
 		return;
@@ -387,7 +393,7 @@ void GameArcanoid::callback_block_died(Block* block)
 	while (iter != m_activeBlocksVector.cend()) {
 		if (*iter == block) {
 			m_activeBlocksVector.erase(iter);
-			m_inactiveBlocksVector.push_back(block);
+         delete block;
 			break;
 		}
 		++iter;

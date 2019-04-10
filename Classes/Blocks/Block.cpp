@@ -8,5 +8,6 @@ Block::Block() :
 
 Block::~Block()
 {
-   m_sprite = nullptr;
+   if(m_sprite)
+      m_sprite->removeFromParent();
 }
